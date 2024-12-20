@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rectangle Animation</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Canvas: Rectangle Animation Example</h1>
+    <canvas id="animationCanvas" width="600" height="400"></canvas>
+
+    <script>
+        // Set up the canvas and context
+        const canvas = document.getElementById('animationCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let x = 0;  // Initial x position of the rectangle
+
+        // Animation function
+        function animate() {
+            // Clear the canvas to avoid drawing over the previous frame
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Set the color for the rectangle
+            ctx.fillStyle = "blue";
+
+            // Draw a filled rectangle with dynamic x position
+            ctx.fillRect(x, 100, 50, 50);
+
+            // Update x position to move the rectangle
+            x += 2; // Speed of the rectangle's movement
+
+            // Reset x to 0 when the rectangle moves off the screen
+            if (x > canvas.width) x = 0;
+
+            // Call the animate function again on the next frame
+            requestAnimationFrame(animate);
+        }
+
+        // Start the animation
+        animate();
+    </script>
+</body>
+</html>

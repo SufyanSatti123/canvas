@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Shooting Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+            color: white;
+            font-family: 'Poppins', Arial, sans-serif;
+            text-align: center;
+        }
+        h1 {
+            margin: 20px;
+            font-size: 36px;
+        }
+        p {
+            margin: 10px 0 30px;
+            font-size: 16px;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: radial-gradient(circle, #ffffff, #e0e0e0);
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+        #popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ffffff;
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        #popup h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        #popup p {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        #playAgain {
+            padding: 10px 20px;
+            background: #FF6347;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #playAgain:hover {
+            background: #e55337;
+        }
+    </style>
+</head>
+<body>
+    <h1>Canvas Shooting Game</h1>
+    <p>Use <strong>Arrow Keys</strong> to aim the cannon and <strong>Space</strong> to shoot!</p>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+    <div id="popup">
+        <h2>Game Over!</h2>
+        <p id="finalScore">Final Score: 0</p>
+        <button id="playAgain">Play Again</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+    
+        const cannon = {
+            x: canvas.width / 2,
+            y: canvas.height - 50,
+            barrelLength: 40,
+            barrelAngle: Math.PI / 2,
+            baseRadius: 20,
+            color: "#FF6347",
+        };
+    
+        const bullets = [];
+        const targets = [];
+    
+        const BULLET_SPEED = 7;
+        const TARGET_SPEED = 2;
+        const TARGET_SIZE = 25;
+    
+        let score = 0;
+        let isGameOver = false;
+        let keys = {};
+        let targetInterval; // Track target spawning interval
+    
+        document.addEventListener("keydown", (e) => keys[e.key] = true);
+        document.addEventListener("keyup", (e) => keys[e.key] = false);
+    
+        function spawnTarget() {
+            const x = Math.random() * (canvas.width - TARGET_SIZE);
+            targets.push({ x: x, y: -TARGET_SIZE, width: TARGET_SIZE, height: TARGET_SIZE });
+        }
+    
+        function drawCannon() {
+            ctx.save();
+            ctx.translate(cannon.x, cannon.y);
+            ctx.rotate(-cannon.barrelAngle);
+            ctx.fillStyle = cannon.color;
+            ctx.fillRect(0, -5, cannon.barrelLength, 10);
+            ctx.restore();
+    
+            ctx.beginPath();
+            ctx.arc(cannon.x, cannon.y, cannon.baseRadius, 0, Math.PI * 2);
+            ctx.fillStyle = cannon.color;
+            ctx.fill();
+        }
+    
+        function drawBullets() {
+            ctx.fillStyle = "#FFD700";
+            bullets.forEach(bullet => {
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+    
+        function drawTargets() {
+            ctx.fillStyle = "green";
+            targets.forEach(target => {
+                ctx.beginPath();
+                ctx.arc(target.x + target.width / 2, target.y + target.height / 2, target.width / 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+    
+        function update() {
+            if (keys["ArrowLeft"] && cannon.barrelAngle < Math.PI) {
+                cannon.barrelAngle += 0.05;
+            }
+            if (keys["ArrowRight"] && cannon.barrelAngle > 0) {
+                cannon.barrelAngle -= 0.05;
+            }
+    
+            if (keys[" "] && bullets.length < 5) {
+                const bulletX = cannon.x + Math.cos(-cannon.barrelAngle) * cannon.barrelLength;
+                const bulletY = cannon.y + Math.sin(-cannon.barrelAngle) * cannon.barrelLength;
+                bullets.push({
+                    x: bulletX,
+                    y: bulletY,
+                    dx: Math.cos(-cannon.barrelAngle) * BULLET_SPEED,
+                    dy: Math.sin(-cannon.barrelAngle) * BULLET_SPEED,
+                });
+            }
+    
+            bullets.forEach((bullet, index) => {
+                bullet.x += bullet.dx;
+                bullet.y += bullet.dy;
+                if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0) bullets.splice(index, 1);
+            });
+    
+            targets.forEach((target, index) => {
+                target.y += TARGET_SPEED;
+                if (target.y > canvas.height) {
+                    isGameOver = true;
+                }
+            });
+    
+            bullets.forEach((bullet, bIndex) => {
+                targets.forEach((target, tIndex) => {
+                    if (bullet.x > target.x &&
+                        bullet.x < target.x + target.width &&
+                        bullet.y > target.y &&
+                        bullet.y < target.y + target.height) {
+                        bullets.splice(bIndex, 1);
+                        targets.splice(tIndex, 1);
+                        score += 10;
+                    }
+                });
+            });
+        }
+    
+        function showPopup() {
+            const popup = document.getElementById("popup");
+            const finalScore = document.getElementById("finalScore");
+            finalScore.textContent = `Final Score: ${score}`;
+            popup.style.display = "block";
+    
+            document.getElementById("playAgain").addEventListener("click", () => {
+                popup.style.display = "none";
+                resetGame();
+            });
+        }
+    
+        function resetGame() {
+            clearInterval(targetInterval); // Clear existing interval
+            score = 0;
+            isGameOver = false;
+            bullets.length = 0;
+            targets.length = 0;
+            cannon.barrelAngle = Math.PI / 2;
+            targetInterval = setInterval(spawnTarget, 1500); // Restart the interval
+            gameLoop();
+        }
+    
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+            if (!isGameOver) {
+                drawCannon();
+                drawBullets();
+                drawTargets();
+                update();
+             
+                ctx.fillStyle = "white";
+                ctx.font = "20px 'Poppins', Arial, sans-serif";
+                ctx.fillText("Score: " + score, 10, 30);
+    
+                requestAnimationFrame(gameLoop);
+            } else {
+                showPopup();
+            }
+        }
+    
+        targetInterval = setInterval(spawnTarget, 1500); // Initial interval
+        gameLoop();
+    </script>
+    
+</body>
+</html>

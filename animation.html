@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Animation</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Canvas Animation Example</h1>
+    <canvas id="animationCanvas" width="600" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('animationCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Ball properties
+        let ballX = 50; // Initial x-coordinate of the ball
+        let ballY = 50; // Initial y-coordinate of the ball
+        let ballRadius = 20; // Radius of the ball
+        let ballSpeedX = 4; // Horizontal speed
+        let ballSpeedY = 3; // Vertical speed
+
+        // Animation loop
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+            // Draw the ball
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2); // Draw a circle
+            ctx.fillStyle = "blue"; // Set the ball color
+            ctx.fill();
+            ctx.closePath();
+
+            // Update ball position
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Bounce the ball off the canvas edges
+            if (ballX + ballRadius > canvas.width || ballX - ballRadius < 0) {
+                ballSpeedX = -ballSpeedX; // Reverse horizontal direction
+            }
+            if (ballY + ballRadius > canvas.height || ballY - ballRadius < 0) {
+                ballSpeedY = -ballSpeedY; // Reverse vertical direction
+            }
+
+            requestAnimationFrame(animate); // Call the animation function recursively
+        }
+
+        // Start the animation
+        animate();
+    </script>
+</body>
+</html>
